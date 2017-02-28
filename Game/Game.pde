@@ -1,17 +1,14 @@
-int HEALTH_BAR_MARGIN = 5;
-float healthBarLength;
-int healthBarWidth;
-int viewWidth;
-int viewLength;
-boolean keys[];
-ArrayList<Bullet> bullets;
-boolean isPressed;
-int fRate;
-ArrayList<Enemy> enemies;
-int viewSize;
-int tileSize;
-int maxXPos;
-int maxYPos;
+// Valiables
+int HEALTH_BAR_MARGIN = 5;  // The margin of the health bar from the side
+float healthBarLength; // The max length of the health bar
+int healthBarWidth; // The verticle height of the health bar
+int viewWidth; // the width in pixals of the game
+int viewLength; // The height in pixals of the game
+boolean keys[];  // 0 = a, 1 = s, 2 = d, 3 = w, 4 = ' ', 5 = r 
+ArrayList<Bullet> bullets; // Stores all the bullets currently on the screen
+boolean isPressed; // Stores if the mouse is currently clicked
+int fRate; // The frame rate of the program
+ArrayList<Enemy> enemies; // Stores all the enemies
 int countDown;
 int ammo;
 int fullClip;
@@ -37,7 +34,15 @@ void setUpConstants() {
   setUpKeys();
 }
 void restart() {
+  gameStarted = false;
+  gameOver = false;
+  gameWin = false;
   startup(); 
+}
+
+void gameOver() {
+  gameOver = true;
+  isPressed = true;
 }
 void startup() {
   ammo = fullClip;
@@ -47,16 +52,17 @@ void startup() {
   gameOver = false;
   isPressed = false;
   enemies = new ArrayList<Enemy>();
-  for(int i = 8; i < 30; i++) {
+  for(int i = 15; i < 30; i++) {
+     enemies.add(new ZombieSmart((int)random(0, width), (int)random(0,height), (i)/3));
      enemies.add(new ZombieDumb((int)random(0, width), (int)random(0,height), (i)/4));
   }
-  player = new Player(viewWidth/2, viewLength/2, 5, 5, 100);
+  player = new Player(viewWidth/2, viewLength/2, 7, 5, 100);
   bullets = new ArrayList<Bullet>();
 }
 void runCountDown()  {
    countDown += 1;
    textSize(128);
-   fill(0);
+   fill(255);
    text(3 - (countDown / 30), width/2, height/2);
    if(countDown == fRate * 3) {
      gameStarted = true;
@@ -72,9 +78,9 @@ void draw() {
     rect(0, 0, width, height);
     runKeys();
     player.update();
-    updateEnemies();
     updateShooting();
     updateBullets(); // Calls the draw bullets
+    updateEnemies();
   } else if(!gameOver) { 
     fill(100,100, 200);
     rect(0, 0, width, height);
@@ -85,9 +91,12 @@ void draw() {
     rect(0,0,width,height);
     textSize(128);
     fill(255, 0, 0);
-    text("Game Over\n(\tClick to restart)", width/2 - width/4, height/2);
+    text("   Game Over\n(Click to restart)", width/2 - 500, height/2);
     if(mousePressed && !isPressed) {
       restart();
+    }
+    if(!mousePressed) {
+      isPressed = false; 
     }
   }
   if(gameWin) {
@@ -95,18 +104,22 @@ void draw() {
     rect(0,0,width,height);
     textSize(128);
     fill(255, 0, 0);
-    text("\tGame Win\n(Click to restart)", width/2 - width/4, height/2);
-    if(mousePressed) {
+    text("  Game Win\n(Click to restart)", width/2 - 500, height/2);
+    if(mousePressed && !isPressed) {
       restart();
+    }
+    if(!mousePressed) {
+      isPressed = false; 
     }
   }
   drawHealthBar();
+  drawBoostBar();
   drawAmmo();
 }
 
 void win() {
   gameWin = true;
-  gameOver = true;
+  gameOver();
 }
 void drawAmmo() {
    textSize(64);
@@ -161,10 +174,10 @@ void updateShooting() {
 int updateY(int y, int delta) {
    int newValue = y + delta;
    if(newValue < 0) {
-      return viewLength + newValue;
+      return 0;
    } else if(newValue > viewLength) {
        // Return the number of pixels you went past the end
-      return newValue - viewLength;
+      return viewLength;
    } else {
       return newValue;
    }
@@ -177,10 +190,10 @@ float distance(float x1, float y1, float x2, float y2) {
 int updateX(int x, int delta) {
    int newValue = x + delta;
    if(newValue < 0) {
-      return viewWidth + newValue;
+      return 0;
    } else if(newValue > viewWidth) {
        // Return the number of pixels you went past the end
-      return newValue - viewWidth;
+      return viewWidth;
    } else {
       return newValue;
    }
@@ -192,6 +205,17 @@ void setUpKeys() {
    for(int i = 0; i < keys.length; i++) {
       keys[i] = false; 
    }
+}
+
+void drawBoostBar() {
+   float barLength = healthBarLength * (player.boostAmount / MAX_PLAYER_BOOST);
+   stroke(0, 0, 255);
+   strokeWeight(5);
+   noFill();
+   rect(4*HEALTH_BAR_MARGIN+healthBarLength, HEALTH_BAR_MARGIN, healthBarLength, healthBarWidth, 10);
+   fill(100,100,255);
+   rect(4*HEALTH_BAR_MARGIN + healthBarLength, HEALTH_BAR_MARGIN, barLength, healthBarWidth, 5);
+   stroke(0);
 }
 
 void drawHealthBar() {
@@ -206,7 +230,13 @@ void drawHealthBar() {
 }
 
 void runKeys() {
-  boolean boost = keys[4];
+  boolean boost = false;
+  if(player.boostAmount > 0) {
+      boost = keys[4];
+  }
+  if(boost) {
+    player.boostAmount--; 
+  }
   if(keys[0]) {
      player.moveLeft(boost);
   }

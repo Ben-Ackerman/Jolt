@@ -11,6 +11,6 @@ class ZombieDumb extends Enemy {
      float angle = atan2(gY-y, gX-x);
       y += sin(angle) * speed;
       x += cos(angle) * speed;
-     update();
+      update();
    }
 }

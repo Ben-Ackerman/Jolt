@@ -1,5 +1,6 @@
 int PLAYER_HIT_BOX_SIZE = 30;
 float MAX_PLAYER_HEALTH = 100;
+float MAX_PLAYER_BOOST = 100;
 class Player {
   Player(int x, int y, int speed, int boost, int health) {
      this.x = x;
@@ -7,12 +8,14 @@ class Player {
      this.speed = speed;
      this.health = health;
      this.boost = boost;
+     this.boostAmount = 100;
   }
   int x;
   int y;
   float health;
   int speed;
   int boost;
+  int boostAmount;
   void moveLeft(boolean isBoost) {
      int delta = isBoost ? speed + boost : speed;
      x = updateX(x, delta * -1);

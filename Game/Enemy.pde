@@ -35,7 +35,10 @@ abstract class Enemy {
    void hitPlayer (Player player) {
        if(distance(x, y, player.x, player.y) < PLAYER_HIT_BOX_SIZE) {
           player.health = (player.health <= damage) ? 0 : player.health - damage;
-          gameOver = player.health <= 0;
+          if(player.health <= 0) {
+             gameOver(); 
+          }
+         
        }
    }
 }
